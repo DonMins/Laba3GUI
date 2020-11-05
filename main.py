@@ -1,9 +1,11 @@
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-from PyQt5.QtMultimedia import *
-from PyQt5.QtMultimediaWidgets import *
 import sys
+
+from Dollar import Dollar
+from Oil import Oil
+from Ruble import Ruble
 
 top = 400
 left = 400
@@ -16,47 +18,6 @@ DOLLAR = 80
 # 1 баррель нефти в долларах
 OIL_DOLLAR = OIL_RUB/DOLLAR
 
-class Converter():
-    def __init__(self, ruble, dollar, oil):
-        self.ruble = ruble
-        self.dollar = dollar
-        self.oil = oil
-
-    def getRuble(self):
-        return str(self.ruble)
-
-    def getDollar(self):
-        return str(self.dollar)
-
-    def getOil(self):
-        return str(self.oil)
-
-    def update(self, ruble, dollar, oil):
-        oldOil = self.oil
-        oldDollar = self.dollar
-        oldRuble = self.ruble
-
-        if ruble > oldRuble or ruble < oldRuble:
-            self.dollar = ruble/DOLLAR
-            self.oil = ruble/OIL_RUB
-            self.ruble = ruble
-
-        if dollar > oldDollar or  dollar < oldDollar:
-            self.oil = dollar / OIL_DOLLAR
-            self.ruble = dollar * DOLLAR
-            self.dollar = dollar
-
-        if oil > oldOil:
-            self.dollar = self.dollar
-            self.ruble = oldRuble * 2
-            self.oil = oil
-
-        if oil < oldOil:
-            self.dollar = oldDollar / 2
-            self.ruble = self.ruble
-            self.oil = oil
-
-
 class Window(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -65,7 +26,13 @@ class Window(QMainWindow):
 
         icon = "cat.jpg"
 
-        self.converter = Converter(OIL_RUB, OIL_DOLLAR, 1)
+        self.dollar = Dollar(OIL_DOLLAR)
+        self.dollar.setDollar.connect(self.dollar.update)
+        self.ruble = Ruble(OIL_RUB)
+        self.ruble.setRuble.connect(self.ruble.update)
+        self.oil = Oil(1)
+
+
         self.setWindowTitle(title)
         self.setGeometry(top, left, width, height)
         self.setFixedSize(width, height)
@@ -83,12 +50,12 @@ class Window(QMainWindow):
         self.rubleEdit.move(150,20)
         self.rubleEdit.resize(200, 30)
         self.rubleEdit.setFont(QFont('Arial', 10))
-        self.rubleEdit.setText(self.converter.getRuble())
+        self.rubleEdit.setText(self.ruble.getRuble())
         validator = QDoubleValidator(self)
         locale = QLocale("en")
         validator.setLocale(locale)
         self.rubleEdit.setValidator(validator)
-        # self.rubleEdit.setReadOnly(True)
+        self.rubleEdit.setReadOnly(True)
 
         self.dollarLabel.setText("Доллар:")
         self.dollarLabel.move(20,80)
@@ -96,12 +63,11 @@ class Window(QMainWindow):
 
         self.dollarEdit = QLineEdit(self)
         self.dollarEdit.move(150, 80)
-        # self.dollarEdit.setReadOnly(True)
+        self.dollarEdit.setReadOnly(True)
         self.dollarEdit.resize(200, 30)
-        self.dollarEdit.setText(self.converter.getDollar())
+        self.dollarEdit.setText(self.dollar.getDollar())
         self.dollarEdit.setFont(QFont('Arial', 10))
         self.dollarEdit.setValidator(validator)
-
 
         self.oilLabel.setText("Нефть:")
         self.oilLabel.move(20,140)
@@ -111,7 +77,7 @@ class Window(QMainWindow):
         self.oilEdit = QLineEdit(self)
         self.oilEdit.move(150, 140)
         self.oilEdit.resize(200, 30)
-        self.oilEdit.setText(self.converter.getOil())
+        self.oilEdit.setText(self.oil.getOil())
         self.oilEdit.setFont(QFont('Arial', 10))
         self.oilEdit.setValidator(validator)
 
@@ -121,14 +87,23 @@ class Window(QMainWindow):
         self.btn1.clicked.connect(self.buttonClicked)
 
     def buttonClicked(self):
-        newRuble = float(self.rubleEdit.text())
-        newDollar = float(self.dollarEdit.text())
         newOil = float(self.oilEdit.text())
-        self.converter.update(newRuble, newDollar, newOil)
+        oldOil = float(self.oil.getOil())
+        self.oil.setOil(self.oilEdit.text())
+        if newOil > oldOil:
+            self.ruble.setRuble.emit(1)
+            self.rubleEdit.setText(self.ruble.getRuble())
 
-        self.oilEdit.setText(self.converter.getOil())
-        self.rubleEdit.setText(self.converter.getRuble())
-        self.dollarEdit.setText(self.converter.getDollar())
+            self.dollar.setDollar.emit(-1)
+            self.dollarEdit.setText(self.dollar.getDollar())
+
+        if newOil < oldOil:
+            self.dollar.setDollar.emit(1)
+            self.dollarEdit.setText(self.dollar.getDollar())
+
+            self.ruble.setRuble.emit(-1)
+            self.rubleEdit.setText(self.ruble.getRuble())
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
