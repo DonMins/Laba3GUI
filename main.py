@@ -22,15 +22,6 @@ class Converter():
         self.dollar = dollar
         self.oil = oil
 
-    def setRuble(self, ruble):
-        self.ruble = ruble
-
-    def setDollar(self, dollar):
-        self.dollar = dollar
-
-    def setOil(self, oil):
-        oldOil = self.oil
-
     def getRuble(self):
         return str(self.ruble)
 
@@ -55,9 +46,14 @@ class Converter():
             self.ruble = dollar * DOLLAR
             self.dollar = dollar
 
-        if oil > oldOil or oil < oldOil :
-            self.dollar = oldDollar / (oil / oldOil)
-            self.ruble = oldRuble * (oil / oldOil)
+        if oil > oldOil:
+            self.dollar = self.dollar
+            self.ruble = oldRuble * 2
+            self.oil = oil
+
+        if oil < oldOil:
+            self.dollar = oldDollar / 2
+            self.ruble = self.ruble
             self.oil = oil
 
 
@@ -107,10 +103,10 @@ class Window(QMainWindow):
         self.dollarEdit.setValidator(validator)
 
 
-        self.oilLabel.setText("Нефть(баррель):")
+        self.oilLabel.setText("Нефть:")
         self.oilLabel.move(20,140)
         self.oilLabel.resize(200, 30)
-        self.oilLabel.setFont(QFont('Arial', 12))
+        self.oilLabel.setFont(QFont('Arial', 20))
 
         self.oilEdit = QLineEdit(self)
         self.oilEdit.move(150, 140)
